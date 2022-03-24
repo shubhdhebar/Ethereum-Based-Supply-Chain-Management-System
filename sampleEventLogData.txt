@@ -1,0 +1,11 @@
+{'args': AttributeDict({'assembler': '0x9c9Cc5Fdaf14e3D3Dcdb0E640448ddEBBF686720',
+ 'inventory': '0x04750f8664c32208CC80C4c60bDD2871467c7dc5',
+ 'product_id': 1001, 'batch_id': 1, 'message': 'In storage'}),
+ 
+ 'event': 'manufacture', 
+ 'logIndex': 0, 
+ 'transactionIndex': 0, 
+ 'transactionHash': HexBytes('0x8638c0c5c7a62ba91496dcfb2b52100f4b4eb82e76540001ef885f08af888dcc'), 
+ 'address': '0x4D952851a4b59300ee1A1b83b5B2C74959587505', 
+ 'blockHash': HexBytes('0xedc9e3bdb072cd17e61a8765e86fbfbdff78ea0e6c88cc12daaff23ce1f7910b'), 
+ 'blockNumber': 11}

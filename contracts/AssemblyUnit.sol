@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
 
-
 contract assembly_unit {
     uint batch_id;
     

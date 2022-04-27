@@ -21,9 +21,9 @@ def insertBatch(batch_id,timestamp,tx):
     dbQueries.addBatch(batch_id,timestamp,tx)
 
 
-@app.post("/assembler/manufacture")
+@app.post("/assembler")
 def assemble(batch_id,product_id,timestamp,tx):
-    dbQueries.addProduct(batch_id,pid,timestamp,tx)
+    dbQueries.addProduct(batch_id,product_id,timestamp,tx)
    
 @app.post("/qualityControl")
 def checkQuality(product_id,tx,officer_name,message,grade):

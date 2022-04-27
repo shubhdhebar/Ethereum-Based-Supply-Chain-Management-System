@@ -26,34 +26,34 @@ def app():
         web3.eth.defaultAccount=web3.eth.accounts[1]#address of assembler
 
         #Smart Contract for manufacturing new product
-        address = web3.toChecksumAddress("0x41BC77FD0106104DB2371bBa7044F5D51759ADe8")
-        abi = json.loads('[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"string","name":"timestamp","type":"string"},{"indexed":false,"internalType":"address","name":"assembler","type":"address"},{"indexed":false,"internalType":"address","name":"inventory","type":"address"},{"indexed":false,"internalType":"uint256","name":"product_id","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"batch_id","type":"uint256"}],"name":"manufacture","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"string","name":"timestamp","type":"string"},{"indexed":false,"internalType":"address","name":"supplier","type":"address"},{"indexed":false,"internalType":"address","name":"assembler","type":"address"},{"indexed":false,"internalType":"uint256","name":"batch_id","type":"uint256"}],"name":"newBatch","type":"event"},{"constant":false,"inputs":[{"internalType":"string","name":"timestamp","type":"string"},{"internalType":"address","name":"supplier","type":"address"},{"internalType":"address","name":"assembler","type":"address"},{"internalType":"uint256","name":"batchID","type":"uint256"}],"name":"orderNewBatch","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"string","name":"timestamp","type":"string"},{"internalType":"address","name":"assembler","type":"address"},{"internalType":"address","name":"inventory","type":"address"},{"internalType":"uint256","name":"product_id","type":"uint256"},{"internalType":"address","name":"supplier","type":"address"}],"name":"sendToInventory","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]')
+        address = web3.toChecksumAddress("0xD55bD03b722AFb412dEB3A7e62367f91E70a4BB1")
+        abi = json.loads('[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"processID","type":"uint256"},{"indexed":false,"internalType":"string","name":"timestamp","type":"string"},{"indexed":false,"internalType":"address","name":"from","type":"address"},{"indexed":false,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"batch_id","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"product_id","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"qc_update","type":"uint256"},{"indexed":false,"internalType":"string","name":"optionalStrArg","type":"string"},{"indexed":false,"internalType":"uint256","name":"lastProductAssembled","type":"uint256"},{"indexed":false,"internalType":"uint256[20]","name":"QCQueue","type":"uint256[20]"}],"name":"supplyChainEvent","type":"event"},{"constant":false,"inputs":[{"internalType":"string","name":"timestamp","type":"string"},{"internalType":"address","name":"supplier","type":"address"},{"internalType":"address","name":"assembler","type":"address"},{"internalType":"uint256","name":"batchID","type":"uint256"},{"internalType":"uint256","name":"lastProductAssembled","type":"uint256"},{"internalType":"uint256[20]","name":"QCQueue","type":"uint256[20]"}],"name":"orderNewBatch","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"string","name":"timestamp","type":"string"},{"internalType":"address","name":"qualityControl","type":"address"},{"internalType":"address","name":"inventory","type":"address"},{"internalType":"uint256","name":"batch_id","type":"uint256"},{"internalType":"uint256","name":"product_id","type":"uint256"},{"internalType":"string","name":"message","type":"string"},{"internalType":"uint256","name":"grade","type":"uint256"},{"internalType":"uint256","name":"lastProductAssembled","type":"uint256"},{"internalType":"uint256[20]","name":"QCQueue","type":"uint256[20]"}],"name":"qualityCheck","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"string","name":"timestamp","type":"string"},{"internalType":"address","name":"assembler","type":"address"},{"internalType":"address","name":"inventory","type":"address"},{"internalType":"uint256","name":"product_id","type":"uint256"},{"internalType":"address","name":"supplier","type":"address"},{"internalType":"uint256","name":"lastProductAssembled","type":"uint256"},{"internalType":"uint256[20]","name":"QCQueue","type":"uint256[20]"}],"name":"sendToInventory","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]')
         contract = web3.eth.contract(address=address,abi=abi)
-        pid=0
-        filter=contract.events.manufacture.createFilter(fromBlock=65,toBlock='latest')
         
+        
+        filter=contract.events.supplyChainEvent.createFilter(fromBlock='latest')
         entry = filter.get_all_entries()
         getProduct=entry.pop()
-        pid=getProduct['args']['product_id']
-        batch_id=getProduct['args']['batch_id']
-        pid=pid+1
+        lastProduct=getProduct['args']['lastProductAssembled']
+        batch_id=lastProduct//100
+        QCQueue=getProduct['args']['QCQueue']
 
         timestamp = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
-        tx=web3.toHex(contract.functions.sendToInventory(str(timestamp), assembler,inventory,pid,supplier).transact())
+        tx=web3.toHex(contract.functions.sendToInventory(str(timestamp), assembler,inventory,0,supplier,lastProduct,QCQueue).transact())
         
         #Check if newBatch was called
-        filter=contract.events.newBatch.createFilter(fromBlock='latest')
-        for entry in filter.get_all_entries():
-            if entry['args']['timestamp'] == str(timestamp):
-                batch_id=int(entry['args']['batch_id'])
-                timestamp=str(timestamp)
-                tx=str(web3.toHex(entry['transactionHash']))
-                requests.post(url=f"http://localhost:8000/insertBatch?batch_id={batch_id}&timestamp={timestamp}&tx={tx}")
+        blockNum=web3.eth.get_block_number()
+        filter=contract.events.supplyChainEvent.createFilter(fromBlock=blockNum-1)
+        entry = filter.get_all_entries()
+        if entry[0]['args']['processID'] == 0:
+            batch_id=int(entry[0]['args']['batch_id'])
+            timestamp=str(timestamp)
+            tx=str(web3.toHex(entry['transactionHash']))
+            requests.post(url=f"http://localhost:8000/insertBatch?batch_id={batch_id}&timestamp={timestamp}&tx={tx}")
         
-        filter=contract.events.manufacture.createFilter(fromBlock='latest')
-        
-        for entry in filter.get_all_entries():
-            pid=entry['args']['product_id']
+        filter=contract.events.supplyChainEvent.createFilter(fromBlock='latest')
+        entry = filter.get_all_entries()
+        pid=entry[0]['args']['product_id']
         batch_id=pid//100
         timestamp=str(timestamp)
         requests.post(url=f"http://localhost:8000/assembler?batch_id={batch_id}&product_id={pid}&timestamp={timestamp}&tx={tx}")

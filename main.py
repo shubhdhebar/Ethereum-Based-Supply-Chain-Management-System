@@ -26,9 +26,9 @@ def assemble(batch_id,product_id,timestamp,tx):
     dbQueries.addProduct(batch_id,product_id,timestamp,tx)
    
 @app.post("/qualityControl")
-def checkQuality(product_id,tx,officer_name,message,grade):
+def checkQuality(product_id,tx,message,grade):
     timestamp = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
-    dbQueries.addQC(product_id,str(timestamp),tx,officer_name,message,grade)
+    dbQueries.addQC(product_id,str(timestamp),tx,message,grade)
     
 @app.get("/track")
 def trackProduct(product_id):
@@ -39,7 +39,6 @@ def trackProduct(product_id):
         'Product Assembled on':data[1],
         'Transaction hash for assembly':data[2],
         'Quality assessment done on':data[3],
-        'Quality assessment done by':data[5],
         'Grade assigned':data[7],
         'Comment(s) by Quality Control':data[6],
         'Transaction hash for Quality Control':data[4]

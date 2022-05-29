@@ -9,10 +9,25 @@ import pytz #timezone
 ganache_url = "http://127.0.0.1:7545"
 web3 = Web3(Web3.HTTPProvider(ganache_url))
 
+supplier = "0x201d4f0E4BD39930Aa905B6A2A2803616dCfaA03"
+assembler = "0x9c9Cc5Fdaf14e3D3Dcdb0E640448ddEBBF686720"
+inventory = "0x04750f8664c32208CC80C4c60bDD2871467c7dc5"
+qualityControl = "0xDd7dB8434f218e62fb3c6DF6C6eeED47121C54f0"
+
 def app():
+    address = web3.toChecksumAddress("0x76C359fcb994E00dc8463ed89ae3EdCAd4412bDE")
+    abi = json.loads('[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"processID","type":"uint256"},{"indexed":false,"internalType":"string","name":"timestamp","type":"string"},{"indexed":false,"internalType":"address","name":"from","type":"address"},{"indexed":false,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"batch_id","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"product_id","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"qc_update","type":"uint256"},{"indexed":false,"internalType":"string","name":"optionalStrArg","type":"string"},{"indexed":false,"internalType":"uint256","name":"lastProductAssembled","type":"uint256"},{"indexed":false,"internalType":"uint256[20]","name":"QCQueue","type":"uint256[20]"}],"name":"supplyChainEvent","type":"event"},{"constant":false,"inputs":[{"internalType":"string","name":"timestamp","type":"string"},{"internalType":"address","name":"supplier","type":"address"},{"internalType":"address","name":"assembler","type":"address"},{"internalType":"uint256","name":"batchID","type":"uint256"},{"internalType":"uint256","name":"lastProductAssembled","type":"uint256"},{"internalType":"uint256[20]","name":"QCQueue","type":"uint256[20]"}],"name":"orderNewBatch","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"string","name":"timestamp","type":"string"},{"internalType":"address","name":"qualityControl","type":"address"},{"internalType":"address","name":"inventory","type":"address"},{"internalType":"uint256","name":"batch_id","type":"uint256"},{"internalType":"uint256","name":"product_id","type":"uint256"},{"internalType":"string","name":"message","type":"string"},{"internalType":"uint256","name":"grade","type":"uint256"},{"internalType":"uint256","name":"lastProductAssembled","type":"uint256"},{"internalType":"uint256[20]","name":"QCQueue","type":"uint256[20]"}],"name":"qualityCheck","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"string","name":"timestamp","type":"string"},{"internalType":"address","name":"assembler","type":"address"},{"internalType":"address","name":"inventory","type":"address"},{"internalType":"uint256","name":"product_id","type":"uint256"},{"internalType":"address","name":"supplier","type":"address"},{"internalType":"uint256","name":"lastProductAssembled","type":"uint256"},{"internalType":"uint256[20]","name":"QCQueue","type":"uint256[20]"}],"name":"sendToInventory","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]')
+    contract = web3.eth.contract(address=address,abi=abi)
+    filter=contract.events.supplyChainEvent.createFilter(fromBlock='latest')
+    entry = filter.get_all_entries()
+    Q=[]
+    qc_list=entry[0]['args']['QCQueue']
+    for id in qc_list:
+        if id!=0:
+            Q.append(id)
+
     st.title("Quality Control")
-    product_id=st.text_input("Product ID")
-    officer_name=st.text_input("Officer Name")
+    product_id=st.selectbox("Product ID",options=Q)
     message = st.text_input("Comment")
     grade=st.text_input("Grade(1/0)")
 
@@ -20,14 +35,13 @@ def app():
     if button1:
         web3.eth.defaultAccount=web3.eth.accounts[2]
         timestamp = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
-
-        address = web3.toChecksumAddress("0xf2DC6E048737956f0adE6675b3fd5A232Db1591e")
-        abi = json.loads('[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"string","name":"timestamp","type":"string"},{"indexed":false,"internalType":"uint256","name":"product_id","type":"uint256"},{"indexed":false,"internalType":"string","name":"officer","type":"string"},{"indexed":false,"internalType":"string","name":"message","type":"string"},{"indexed":false,"internalType":"uint256","name":"grade","type":"uint256"}],"name":"qualityControl","type":"event"},{"constant":false,"inputs":[{"internalType":"string","name":"timestamp","type":"string"},{"internalType":"uint256","name":"product_id","type":"uint256"},{"internalType":"string","name":"officer","type":"string"},{"internalType":"string","name":"message","type":"string"},{"internalType":"uint256","name":"grade","type":"uint256"}],"name":"qualityCheck","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]')
-        contract = web3.eth.contract(address=address,abi=abi)
         
-        tx=web3.toHex(contract.functions.qualityCheck(str(timestamp), int(product_id), str(officer_name),str(message),int(grade)).transact())
+        lastProduct=entry[0]['args']['lastProductAssembled']
+        QCQueue=entry[0]['args']['QCQueue']
+        product_id=int(product_id)
+        tx=web3.toHex(contract.functions.qualityCheck(str(timestamp), qualityControl, inventory, product_id//100, product_id, str(message),int(grade), lastProduct,QCQueue).transact())
         
-        requests.post(url=f"http://localhost:8000/qualityControl?product_id={product_id}&tx={tx}&officer_name={officer_name}&message={message}&grade={grade}")
+        requests.post(url=f"http://localhost:8000/qualityControl?product_id={product_id}&tx={tx}&message={message}&grade={grade}")
 
         st.success(f"Certified Product ID:{product_id} at {timestamp}")
         st.success(f"Transaction Hash: {tx}")

@@ -18,7 +18,7 @@ def addProduct(batch_id,product_id,timestamp,hash):
     sql='''INSERT into "Product" values(%s,%s,%s,NULL,NULL,NULL,NULL,NULL,%s);'''
     cur.execute(sql,(product_id,timestamp,hash,batch_id,))
     conn.commit()
-
+#addProduct(1001,100101,"","0x00")
 def addQC(product_id,timestamp,hash,message,grade):
     sql='''UPDATE "Product" set "qc_timestamp"=%s,"qc_hash"=%s,"qc_message"=%s,"qc_grade"=%s where "product_id"=%s'''
     cur.execute(sql,(timestamp,hash,message,grade,product_id,))
@@ -32,13 +32,13 @@ def fetchProduct(product_id):
     return result 
 
 def getQualityQueue():
-    sql='''SELECT * from "qualitycontrol" where "quality_status=0"'''
-    cur.excute(sql,())
+    sql='''SELECT "product_id" from "qualitycontrol" where "quality_status"=0'''
+    cur.execute(sql,())
     result=cur.fetchall()
     return result
-
+print(getQualityQueue()[0][0])
 def addToQualityQueue(product_id,timestamp):
-    sql='''INSERT into "qualitycontrol" values(%s,0,%s,NULL,NULL,NULL)'''
+    sql='''INSERT into "qualitycontrol" values(%s,0,%s,NULL,NULL)'''
     cur.execute(sql,(product_id,timestamp,))
     conn.commit()
 

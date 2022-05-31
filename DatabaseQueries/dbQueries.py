@@ -8,8 +8,13 @@ def addBatch(batch_id,timestamp,hash):
     cur.execute(sql,(batch_id,timestamp,hash))
     conn.commit()
 
+def getPreviousProduct():
+    sql='''SELECT max("product_id") from "Product"'''
+    cur.execute(sql,())
+    result=cur.fetchone()
+    return result[0] 
+
 def addProduct(batch_id,product_id,timestamp,hash):
-    
     sql='''INSERT into "Product" values(%s,%s,%s,NULL,NULL,NULL,NULL,NULL,%s);'''
     cur.execute(sql,(product_id,timestamp,hash,batch_id,))
     conn.commit()

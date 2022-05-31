@@ -20,11 +20,22 @@ pid=0
 def insertBatch(batch_id,timestamp,tx):
     dbQueries.addBatch(batch_id,timestamp,tx)
 
+@app.get("/getPrevProduct")
+def getPrevProduct():
+    pid=dbQueries.getPreviousProduct()
+    return pid
 
 @app.post("/assembler")
 def assemble(batch_id,product_id,timestamp,tx):
     dbQueries.addProduct(batch_id,product_id,timestamp,tx)
-   
+    #add to quality control queue
+    dbQueries.addToQualityQueue(product_id,timestamp)
+
+@app.get("/getQualityQueue")
+def getQCQueue():
+    q=dbQueries.getQualityQueue()
+    return q 
+
 @app.post("/qualityControl")
 def checkQuality(product_id,tx,message,grade):
     timestamp = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))

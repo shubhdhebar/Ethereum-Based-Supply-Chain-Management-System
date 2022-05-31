@@ -40,7 +40,22 @@ def getQCQueue():
 def checkQuality(product_id,tx,message,grade):
     timestamp = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
     dbQueries.addQC(product_id,str(timestamp),tx,message,grade)
+    dbQueries.updateQualityQueue(product_id,timestamp,grade)
     
+@app.get("/getStock")
+def getAvailableStock(retailer):
+    result=dbQueries.getStock(retailer)
+    return result 
+
+@app.get("/getPreviousOrder")
+def getPreviousOrder():
+    result=dbQueries.getPrevOrder()
+    return result
+
+@app.post("/addOrder")
+def addOrder(order_id,retailer,qty,timestamp,tx):
+    dbQueries.addOrder(order_id,retailer,qty,timestamp,tx)
+
 @app.get("/track")
 def trackProduct(product_id):
     data=dbQueries.fetchProduct(product_id)

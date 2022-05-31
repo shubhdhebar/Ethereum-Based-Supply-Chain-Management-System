@@ -56,6 +56,20 @@ def getPreviousOrder():
 def addOrder(order_id,retailer,qty,timestamp,tx):
     dbQueries.addOrder(order_id,retailer,qty,timestamp,tx)
 
+@app.get("/remainingOrders")
+def getRemainingOrders():
+    result=dbQueries.getRemainingOrders()
+    return result
+
+@app.get("/availableUnits")
+def getAvailableUnits():
+    result=dbQueries.getCheckedUnits()
+    return result
+
+@app.post("/dispatch")
+def assignRetailer(product_id,order_id,retailer,tx):
+    dbQueries.assignRetailer(product_id,order_id,retailer,tx)
+     
 @app.get("/track")
 def trackProduct(product_id):
     data=dbQueries.fetchProduct(product_id)

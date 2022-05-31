@@ -1,11 +1,11 @@
 import streamlit as st
-import manufacture, qc, track,retailer, distributor
-
+import manufacture, qc, track,retailer,distribution
+ 
 st.sidebar.title("Navigation")
 PAGES = {
     "Assembly": manufacture,
     "Quality Control": qc,
-    "Distributor": distributor,
+    "Distribution": distribution,
     "Retailer":retailer,
     "Track Product":track
     

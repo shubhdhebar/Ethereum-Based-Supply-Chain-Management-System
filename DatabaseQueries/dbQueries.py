@@ -15,7 +15,7 @@ def getPreviousProduct():
     return result[0] 
 
 def addProduct(batch_id,product_id,timestamp,hash):
-    sql='''INSERT into "Product" values(%s,%s,%s,NULL,NULL,NULL,NULL,NULL,%s,NULL,NULL,NULL);'''
+    sql='''INSERT into "Product" values(%s,%s,%s,NULL,NULL,NULL,NULL,NULL,%s,NULL,NULL);'''
     cur.execute(sql,(product_id,timestamp,hash,batch_id,))
     conn.commit()
 #addProduct(1001,100101,"","0x00")
@@ -61,10 +61,17 @@ def getPrevOrder():
     cur.execute(sql,())
     result = cur.fetchone()
     return result[0]
-#print(type(getPrevOrder()))
+
+def getRemainingOrders():
+    sql='''SELECT "order_id","retailer","rem_qty" from "order" where "rem_qty">0'''
+    cur.execute(sql,())
+    result=cur.fetchall()
+    return result
+
 def addOrder(order_id,retailer,qty,timestamp,tx):
-    sql='''INSERT into "order" values(%s,%s,%s,NULL,0,%s,%s)'''
-    cur.execute(sql,(order_id,retailer,qty,timestamp,tx))
+    rem_qty=qty
+    sql='''INSERT into "order" values(%s,%s,%s,%s,%s,%s)'''
+    cur.execute(sql,(order_id,retailer,qty,rem_qty,timestamp,tx))
     conn.commit()
 
 def getCheckedUnits():
@@ -72,3 +79,11 @@ def getCheckedUnits():
     cur.execute(sql,())
     return cur.fetchall()
 
+def assignRetailer(product_id,order_id,retailer,tx):
+    sql='''UPDATE "Product" set "retailer"=%s, "dispatch_hash"=%s where "product_id"=%s'''
+    cur.execute(sql,(retailer,tx,product_id,))
+    sql='''UPDATE "order" set "rem_qty"="rem_qty"-1 where "order_id"=%s'''
+    cur.execute(sql,(order_id,))
+    conn.commit()
+
+    

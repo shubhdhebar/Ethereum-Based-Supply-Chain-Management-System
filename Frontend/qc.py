@@ -35,10 +35,8 @@ def app():
         web3.eth.defaultAccount=web3.eth.accounts[2]
         timestamp = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
         
-        lastProduct=entry[0]['args']['lastProductAssembled']
-        QCQueue=entry[0]['args']['QCQueue']
-        product_id=int(product_id)
-        tx=web3.toHex(contract.functions.qualityCheck(str(timestamp), qualityControl, inventory, product_id//100, product_id, str(message),int(grade), lastProduct,QCQueue).transact())
+        product_id=int(product_id)#input from dropbox
+        tx=web3.toHex(contract.functions.qualityCheck(str(timestamp),  product_id, int(grade), str(message)).transact())
         
         requests.post(url=f"http://localhost:8000/qualityControl?product_id={product_id}&tx={tx}&message={message}&grade={grade}")
 

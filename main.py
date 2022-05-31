@@ -69,7 +69,7 @@ def getAvailableUnits():
 @app.post("/dispatch")
 def assignRetailer(product_id,order_id,retailer,tx):
     dbQueries.assignRetailer(product_id,order_id,retailer,tx)
-     
+
 @app.get("/track")
 def trackProduct(product_id):
     data=dbQueries.fetchProduct(product_id)
@@ -81,7 +81,9 @@ def trackProduct(product_id):
         'Quality assessment done on':data[3],
         'Grade assigned':data[7],
         'Comment(s) by Quality Control':data[6],
-        'Transaction hash for Quality Control':data[4]
+        'Transaction hash for Quality Control':data[4],
+        'Dispatch Hash':data[8],
+        'Retailer Assigned':data[9]
     }
 
     

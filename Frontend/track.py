@@ -18,6 +18,6 @@ def app():
         result=requests.get(url=f"http://localhost:8000/track?product_id={product}").json()
         st.json(result)
 
-    tx=st.text_input("Enter Transaction Hash")
+    
     
     

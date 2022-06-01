@@ -82,8 +82,8 @@ def trackProduct(product_id):
         'Grade assigned':data[7],
         'Comment(s) by Quality Control':data[6],
         'Transaction hash for Quality Control':data[4],
-        'Dispatch Hash':data[8],
-        'Retailer Assigned':data[9]
+        'Dispatch Hash':data[9],
+        'Retailer Assigned':data[10]
     }
 
     
